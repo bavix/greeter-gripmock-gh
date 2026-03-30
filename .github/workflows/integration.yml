@@ -1,8 +1,12 @@
-name: integration
+name: ci
 
 on:
   push:
+    branches:
+      - master
   pull_request:
+    branches:
+      - master
 
 permissions:
   contents: read
@@ -11,6 +15,8 @@ jobs:
   greeter:
     name: greeter-${{ matrix.case.format }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    env:
+      GRPCTESTIFY_VERSION: v1.4.7
     strategy:
       fail-fast: false
       matrix:
@@ -23,17 +29,34 @@ jobs:
             source: api/greeter.proto
           - format: pb
             source: api/greeter.pb
+        include:
+          - os: ubuntu-latest
+            grpctestify_asset: grpctestify-linux-amd64.tar.gz
+            grpctestify_fmt: tgz
+          - os: macos-latest
+            grpctestify_asset: grpctestify-macos-arm64.tar.gz
+            grpctestify_fmt: tgz
+          - os: windows-latest
+            grpctestify_asset: grpctestify-windows-amd64.zip
+            grpctestify_fmt: zip
 
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
 
-      - name: Install grpctestify
+      - name: Install grpctestify fast
         shell: bash
-        run: cargo install grpctestify --locked
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          cargo binstall grpctestify --no-confirm --pkg-url="https://github.com/gripmock/grpctestify-rust/releases/download/${GRPCTESTIFY_VERSION}/${{ matrix.grpctestify_asset }}" --pkg-fmt="${{ matrix.grpctestify_fmt }}"
+
+      - name: Check version
+        shell: bash
+        run: grpctestify --version
 
       - name: Start GripMock
         id: gripmock
