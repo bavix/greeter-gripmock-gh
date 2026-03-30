@@ -4,10 +4,6 @@
 --- ENDPOINT ---
 helloworld.Greeter/SayHello
 
---- PROTO ---
-files: api/greeter.proto
-import_paths: .
-
 --- REQUEST ---
 {
   "name": "CI"
