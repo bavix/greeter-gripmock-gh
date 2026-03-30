@@ -1,8 +1,12 @@
-name: integration
+name: ci
 
 on:
   push:
+    branches:
+      - master
   pull_request:
+    branches:
+      - master
 
 permissions:
   contents: read
@@ -28,12 +32,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install cargo-binstall
+        uses: cargo-bins/cargo-binstall@main
 
-      - name: Install grpctestify
+      - name: Install grpctestify fast
         shell: bash
-        run: cargo install grpctestify --locked
+        run: cargo binstall grpctestify --no-confirm
+
+      - name: Check version
+        shell: bash
+        run: grpctestify --version
 
       - name: Start GripMock
         id: gripmock
