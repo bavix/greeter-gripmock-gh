@@ -49,6 +49,8 @@ jobs:
 
       - name: Install grpctestify fast
         shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           cargo binstall grpctestify --no-confirm --pkg-url="https://github.com/gripmock/grpctestify-rust/releases/download/${GRPCTESTIFY_VERSION}/${{ matrix.grpctestify_asset }}" --pkg-fmt="${{ matrix.grpctestify_fmt }}"
 
