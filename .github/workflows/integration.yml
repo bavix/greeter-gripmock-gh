@@ -1,0 +1,49 @@
+name: integration
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  greeter:
+    name: greeter-${{ matrix.case.format }}-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+        case:
+          - format: proto
+            source: api/greeter.proto
+          - format: pb
+            source: api/greeter.pb
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install grpctestify
+        shell: bash
+        run: cargo install grpctestify --locked
+
+      - name: Start GripMock
+        id: gripmock
+        uses: bavix/gripmock-action@v1
+        with:
+          source: ${{ matrix.case.source }}
+          stub: stubs
+          wait: true
+
+      - name: Check stub response with grpctestify
+        shell: bash
+        run: |
+          grpctestify tests/
